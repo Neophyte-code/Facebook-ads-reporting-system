@@ -13,27 +13,15 @@ return new class extends Migration
     {
         Schema::create('fb_reports', function (Blueprint $table) {
             $table->id();
-            $table->string('ad_account_id');
+            $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->date('date');
-
-            // --- Financial Metrics ---
-            $table->decimal('spend', 10, 2)->default(0); // Total cost
-
-            // --- Delivery Metrics ---
-            $table->integer('impressions')->default(0);  // Total views
-            $table->integer('reach')->default(0);        // Unique people reached
-
-            // --- Engagement Metrics ---
-            $table->integer('clicks')->default(0);       // Link clicks
-            $table->integer('post_engagement')->default(0); // Likes, shares, comments
-
-            // --- Performance Metrics (Calculated or Raw) ---
-            // Note: It's often better to store raw "actions" and calculate
-            // CTR/CPC in your API so the math stays accurate across date ranges.
-            $table->integer('conversions')->default(0);  // Key results (Purchases/Leads)
-
+            $table->decimal('spend', 10, 2);
+            $table->integer('impressions');
+            $table->integer('reach');
+            $table->integer('clicks');
+            $table->integer('post_engagement');
+            $table->integer('conversions');
             $table->timestamps();
-            $table->unique(['ad_account_id', 'date']);
         });
     }
 

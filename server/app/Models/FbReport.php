@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FbReport extends Model
 {
@@ -12,7 +13,7 @@ class FbReport extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'ad_account_id',
+        'client_id',
         'date',
         'spend',
         'impressions',
@@ -30,4 +31,9 @@ class FbReport extends Model
         'date' => 'date',
         'spend' => 'decimal:2',
     ];
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
 }
