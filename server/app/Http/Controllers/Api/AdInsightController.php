@@ -4,27 +4,47 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
-use App\Services\GeminiService;
-use Illuminate\Http\Request;
+use App\Services\AdService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class AdInsightController extends Controller
 {
-    protected $gemini;
+    protected $adService;
 
-    public function __construct(GeminiService $gemini)
+    public function __construct(AdService $adService)
     {
-        $this->gemini = $gemini;
+        $this->adService = $adService;
     }
 
-    public function generate(Request $request, $clientId)
+    public function showInsights(Client $client): JsonResponse
     {
-        $client = Client::findOrFail($clientId);
+        try {
+            // Create a unique cache key for this specific client
+            $cacheKey = "client_insights_{$client->id}";
 
-        $insight = $this->gemini->getAdInsights($client);
+            /**
+             * Cache::remember() does 3 things:
+             * 1. Checks if the key exists.
+             * 2. If yes, returns it immediately (No API call!).
+             * 3. If no, runs the function, saves the result for 3600 seconds (1 hour), and returns it.
+             */
+            $insight = Cache::remember($cacheKey, 3600, function () use ($client) {
+                return $this->adService->getInsights($client);
+            });
 
-        return response()->json([
-            'client_name' => $client->name,
-            'insight' => $insight
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'cached' => Cache::has($cacheKey),
+                'client_name' => $client->name,
+                'ai_advice' => $insight
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Could not generate insights at this time.',
+                'debug' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
     }
 }

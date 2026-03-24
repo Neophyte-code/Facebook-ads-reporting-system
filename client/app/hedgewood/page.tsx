@@ -7,6 +7,7 @@ import type {
   FbReportRecord,
 } from "@/types/ads-report";
 import { Sidebar } from "../components/Sidebar";
+import { Combobox } from "@/components/ui/combobox";
 
 const API_BASE =
   typeof window !== "undefined"
@@ -39,28 +40,30 @@ export default function Home() {
   const [data, setData] = useState<AdsReportResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const clientId = 5;
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(`${API_BASE}/api/ads-report?period=${period}`)
+
+    fetch(`${API_BASE}/api/ads-report?period=${period}&client_id=${clientId}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load: ${res.status}`);
         return res.json();
       })
-      .then((json: AdsReportResponse) => {
+      .then((json) => {
         setData(json);
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Something went wrong");
-        setData(null);
+        setError(err.message);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [period]);
+  }, [period, clientId]);
 
   return (
-    <div className="flex min-h-screen bg-stone-950 text-stone-100 font-[var(--font-geist-sans)]">
+    <div className="flex min-h-screen bg-stone-950 text-stone-100 font-(--font-geist-sans)">
       <Sidebar />
       <main className="flex-1 overflow-auto">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
