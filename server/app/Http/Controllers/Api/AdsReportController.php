@@ -11,19 +11,23 @@ class AdsReportController extends Controller
 {
     public function index(Request $request)
     {
-        // Get the period from the URL (e.g., ?period=weekly), default to 'weekly'
+        // 1. You MUST pass a client_id from Next.js now
+        $clientId = $request->query('client_id');
         $period = $request->query('period', 'weekly');
 
-        $query = FbReport::query();
+        if (!$clientId) {
+            return response()->json(['status' => 'error', 'message' => 'client_id is required'], 400);
+        }
 
-        // Filter based on the requested period
+        // 2. Filter query by the specific client
+        $query = FbReport::where('client_id', $clientId);
+
         if ($period === 'weekly') {
             $query->where('date', '>=', Carbon::now()->subDays(7));
         } elseif ($period === 'monthly') {
             $query->where('date', '>=', Carbon::now()->subDays(30));
         }
 
-        // Get the data sorted by date for the chart
         $reports = $query->orderBy('date', 'asc')->get();
 
         // Calculate Totals for the "Cards" at the top of your dashboard
@@ -41,7 +45,7 @@ class AdsReportController extends Controller
             'status' => 'success',
             'period' => $period,
             'summary' => $stats,
-            'data' => $reports // This array goes directly into your Next.js Line Chart
+            'data' => $reports
         ]);
     }
 }
