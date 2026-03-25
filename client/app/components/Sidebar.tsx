@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/hedgewood", label: "Hedgewood report" },
-  { href: "/lintfree", label: "Lintfree report" },
+  { href: "/facebook", label: "Facebook ads report" },
+  { href: "/google", label: "Google ads report" }
 ] as const;
 
 export function Sidebar() {
@@ -15,7 +15,7 @@ export function Sidebar() {
     <aside className="flex w-56 shrink-0 flex-col border-r border-stone-800 bg-stone-900/90">
       <div className="border-b border-stone-800 px-4 py-4">
         <Link
-          href="/hedgewood"
+          href="/facebook"
           className="text-sm font-semibold text-stone-100 hover:text-amber-400"
         >
           ARS

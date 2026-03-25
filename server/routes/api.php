@@ -13,3 +13,7 @@ Route::get('/test-fb-sync/{id}', function ($id, FacebookAdsService $fbService) {
 });
 
 Route::get('/clients/{client}/insights', [AdInsightController::class, 'showInsights']);
+
+Route::get('/clients', function () {
+    return \App\Models\Client::select('id', 'name')->get();
+});

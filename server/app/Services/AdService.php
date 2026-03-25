@@ -8,26 +8,25 @@ use Illuminate\Support\Collection;
 
 class AdService
 {
-    public function getInsights(Client $client): string
+    public function getInsights(Client $client, string $period = 'weekly'): string
     {
-        // Fetch the last 7 days of data
+
+        $days = ($period === 'monthly') ? 30 : 7;
+
         $reports = $client->fbReports()
             ->orderBy('date', 'desc')
-            ->take(7)
+            ->take($days)
             ->get();
 
         if ($reports->isEmpty()) {
-            return "No recent ad data found for this client to analyze.";
+            return "No recent ad data found for this client in the last $days days.";
         }
 
-        //Prepare the data for the Agent
         $stats = $this->calculateMetrics($reports);
-
-        // Instantiate the Agent
         $agent = new AdInsightAgent($client, $stats);
 
         // Send the prompt to the Agent
-        return $agent->prompt($this->buildPromptBody($client, $stats));
+        return $agent->prompt($this->buildPromptBody($client, $stats, $period));
     }
 
     /**
@@ -54,16 +53,20 @@ class AdService
     /**
      * Format the data string sent to the Agent.
      */
-    private function buildPromptBody(Client $client, array $stats): string
+    private function buildPromptBody(Client $client, array $stats, string $period): string
     {
+        $label = ($period === 'monthly') ? "Latest 30-Day" : "Latest 7-Day";
+
         return sprintf(
-            "Client Industry: %s\nTarget CPL: %s\n\nLatest 30-Day Stats:\n- Spend: %s\n- Conversions: %d\n- CTR: %.2f%%\n- Current CPL: %.2f\n\nPlease provide 3 actionable improvements.",
+            "Client Industry: %s\nTarget CPL: %s\n\n%s Stats:\n- Spend: %s\n- Conversions: %d\n- CTR: %.2f%%\n- Current CPL: %.2f\n\nPlease provide 3 actionable improvements based on this %s performance.",
             $client->industry,
             $client->target_cpl ?? 'Not set',
+            $label,
             number_format($stats['spend'], 2),
             $stats['conversions'],
             $stats['ctr'],
-            $stats['cpl']
+            $stats['cpl'],
+            $period
         );
     }
 }

@@ -8,6 +8,7 @@ export interface FbReportRecord {
   clicks: number;
   post_engagement: number;
   conversions: number;
+  client_name: string;
 }
 
 export interface AdsReportSummary {

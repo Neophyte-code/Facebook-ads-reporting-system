@@ -7,7 +7,8 @@ import type {
   FbReportRecord,
 } from "@/types/ads-report";
 import { Sidebar } from "../components/Sidebar";
-import { Combobox } from "@/components/ui/combobox";
+import { ComboboxBasic } from "../components/ComboboxBasic";
+import { AIInsightCard } from "../components/AIInsightCard";
 
 const API_BASE =
   typeof window !== "undefined"
@@ -35,18 +36,28 @@ function formatDate(dateStr: string) {
   });
 }
 
-export default function Home() {
+export default function facebookAdsReport() {
   const [period, setPeriod] = useState<AdsReportPeriod>("weekly");
   const [data, setData] = useState<AdsReportResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false until a client is picked
   const [error, setError] = useState<string | null>(null);
 
-  const clientId = 5;
+  // client id
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+
   useEffect(() => {
+    // Only fetch if we actually have a client selected
+    if (!selectedClientId) {
+      setData(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
-    fetch(`${API_BASE}/api/ads-report?period=${period}&client_id=${clientId}`)
+    fetch(
+      `${API_BASE}/api/ads-report?period=${period}&client_id=${selectedClientId}`,
+    )
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load: ${res.status}`);
         return res.json();
@@ -60,7 +71,7 @@ export default function Home() {
       .finally(() => {
         setLoading(false);
       });
-  }, [period, clientId]);
+  }, [period, selectedClientId]);
 
   return (
     <div className="flex min-h-screen bg-stone-950 text-stone-100 font-(--font-geist-sans)">
@@ -72,12 +83,16 @@ export default function Home() {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-stone-50 sm:text-3xl">
-                  Hedgewood Report
+                  {/* Check if data exists AND if there is at least one row of records */}
+                  {data && data.data.length > 0
+                    ? `${data.data[0].client_name} Report`
+                    : "Select a Client"}
                 </h1>
                 <p className="mt-1.5 text-sm text-stone-400">
                   Facebook ads performance by period
                 </p>
               </div>
+
               {/* Period tabs */}
               <div className="flex gap-1 rounded-xl bg-stone-900/80 p-1.5 ring-1 ring-stone-800 shadow-inner">
                 {(["weekly", "monthly"] as const).map((p) => (
@@ -97,17 +112,18 @@ export default function Home() {
             </div>
           </header>
 
+          {/* STEP 3: Pass the change handler to your Combobox */}
+          <div className="my-5 max-w-sm">
+            <ComboboxBasic
+              apiBase={API_BASE}
+              onClientChange={(id) => setSelectedClientId(id)}
+            />
+          </div>
+
+          {/* Error & Loading States */}
           {error && (
-            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-950/30 px-4 py-3.5 text-red-300 shadow-lg shadow-red-950/20">
-              {error}. Ensure the API is running (e.g.{" "}
-              <code className="rounded bg-stone-800 px-1.5 py-0.5 text-red-200">
-                php artisan serve
-              </code>
-              ) and{" "}
-              <code className="rounded bg-stone-800 px-1.5 py-0.5 text-red-200">
-                NEXT_PUBLIC_API_URL
-              </code>{" "}
-              points to it.
+            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-950/30 px-4 py-3.5 text-red-300 shadow-lg">
+              {error}
             </div>
           )}
 
@@ -117,9 +133,19 @@ export default function Home() {
             </div>
           )}
 
+          {/* Empty State: Prompt user to select a client */}
+          {!loading && !selectedClientId && (
+            <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-stone-800 rounded-2xl">
+              <p className="text-stone-500">
+                Select a client above to view performance data.
+              </p>
+            </div>
+          )}
+
+          {/* Main Data Display */}
           {!loading && data && (
             <>
-              {/* Summary cards */}
+              {/* Summary cards (keep your existing Card section) */}
               <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Card
                   label="Total spend"
@@ -143,26 +169,17 @@ export default function Home() {
                 />
               </section>
 
+              <section className="mb-10">
+                <AIInsightCard
+                  clientId={Number(selectedClientId)}
+                  apiBase={API_BASE}
+                  period={period}
+                />
+              </section>
+
               {/* Data table */}
               <section className="rounded-xl border border-stone-800 bg-stone-900/50 ring-1 ring-stone-800 overflow-hidden shadow-lg shadow-black/10">
-                <div className="border-b border-stone-800 bg-stone-800/30 px-4 py-3.5 sm:px-6">
-                  <h2 className="text-sm font-semibold text-stone-300">
-                    Report records
-                  </h2>
-                  <p className="mt-0.5 text-xs text-stone-500">
-                    {data.data.length} row{data.data.length !== 1 ? "s" : ""} in{" "}
-                    {period} period
-                  </p>
-                </div>
-                <div className="overflow-x-auto">
-                  {data.data.length === 0 ? (
-                    <div className="px-4 py-12 text-center text-stone-500 sm:px-6">
-                      No records for this period.
-                    </div>
-                  ) : (
-                    <Table records={data.data} />
-                  )}
-                </div>
+                <Table records={data.data} />
               </section>
             </>
           )}

@@ -20,7 +20,9 @@ class AdsReportController extends Controller
         }
 
         // 2. Filter query by the specific client
-        $query = FbReport::where('client_id', $clientId);
+        $query = FbReport::where('fb_reports.client_id', $clientId)
+            ->join('clients', 'fb_reports.client_id', '=', 'clients.id')
+            ->select('fb_reports.*', 'clients.name as client_name');
 
         if ($period === 'weekly') {
             $query->where('date', '>=', Carbon::now()->subDays(7));
