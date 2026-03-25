@@ -18,7 +18,7 @@ interface Client {
 
 interface ComboboxBasicProps {
   apiBase: string;
-  onClientChange: (id: string | null) => void;
+  onClientChange: (id: string | null, name: string | null) => void;
 }
 
 export function ComboboxBasic({ apiBase, onClientChange }: ComboboxBasicProps) {
@@ -48,7 +48,9 @@ export function ComboboxBasic({ apiBase, onClientChange }: ComboboxBasicProps) {
       onValueChange={(value) => {
         const val = value as string | null;
         setSelectedId(val);
-        onClientChange(val);
+        const selectedName =
+          clients.find((c) => c.id.toString() === val)?.name || null;
+        onClientChange(val, selectedName);
       }}
     >
       <ComboboxInput

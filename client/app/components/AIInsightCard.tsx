@@ -55,7 +55,7 @@ export function AIInsightCard({ clientId, apiBase, period }: AIInsightProps) {
         </div>
       </div>
 
-      <div className="p-8 flex flex-col items-center justify-center min-h-[200px]">
+      <div className="p-8 flex flex-col items-center justify-center min-h-50">
         {loading ? (
           <div className="text-center space-y-4">
             <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mx-auto" />
@@ -78,9 +78,9 @@ export function AIInsightCard({ clientId, apiBase, period }: AIInsightProps) {
             </button>
           </div>
         ) : (
-          <div className="text-center">
+          <div className="flex flex-col text-center items-center">
             <p className="text-stone-400 mb-6 text-sm">
-              Click to generate a custom {period} report for this client.
+              Click to generate a {period} report for this client.
             </p>
             <button
               onClick={fetchInsight}
